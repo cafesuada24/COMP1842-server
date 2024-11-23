@@ -1,4 +1,4 @@
-import { verifyToken } from '../../utils/jwtUtils';
+import { verifyToken } from '../../utils/jwtUtils.js';
 
 function verifyUser(req, res, next) {
   const token = req.header('Authorization')?.split(' ')[1]; // Get token from Authorization header
@@ -17,4 +17,4 @@ function verifyUser(req, res, next) {
   }
 }
 
-module.exports = { verifyUser };
+export { verifyUser };

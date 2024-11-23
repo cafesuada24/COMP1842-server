@@ -1,5 +1,5 @@
-import { User } from '../auth/authModel'
-import { generateToken } from '../../utils/jwtUtils';
+import User from '../auth/authModel.js'
+import { generateToken } from '../../utils/jwtUtils.js';
 
 async function register(req, res) {
   try {
@@ -49,4 +49,4 @@ async function login(req, res) {
   }
 }
 
-module.exports = { register, login };
+export { register, login }

@@ -1,12 +1,11 @@
-const jwt = require('jsonwebtoken');
-const { JWT_SECRET, JWT_EXPIRES_IN } = require('../config/authConfig');
+//const jwt = require('jsonwebtoken');
+import jwt from 'jsonwebtoken';
+import { JWT_SECRET, } from '../config/authConfig.js';
 
-function generateToken(userId, role) {
+export function generateToken(userId, role) {
   return jwt.sign({ userId, role }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 }
 
-function verifyToken(token) {
+export function verifyToken(token) {
   return jwt.verify(token, JWT_SECRET);
 }
-
-module.exports = { generateToken, verifyToken };

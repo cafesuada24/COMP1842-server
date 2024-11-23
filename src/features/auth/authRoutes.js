@@ -1,12 +1,12 @@
 import { Router } from 'express';
-import { register, login } from './authController';
-import veriyUser from './authMiddleware';
+import { register, login } from './authController.js';
+import { verifyUser } from './authMiddleware.js';
 
 const router = Router();
 
 router.post('/register', register);
 router.post('/login', login);
-router.get('/profile', veriyUser, (req, res) => {
+router.get('/profile', verifyUser, (req, res) => {
     res.status(200).json({ user: req.user });
 });
 
