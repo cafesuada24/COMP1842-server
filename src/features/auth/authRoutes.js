@@ -1,8 +1,8 @@
-const express = require('express');
-const { register, login } = require('./authController');
-const veriyUser = require('./authMiddleware');
+import { Router } from 'express';
+import { register, login } from './authController';
+import veriyUser from './authMiddleware';
 
-const router = express.Router();
+const router = Router();
 
 router.post('/register', register);
 router.post('/login', login);
@@ -10,4 +10,4 @@ router.get('/profile', veriyUser, (req, res) => {
     res.status(200).json({ user: req.user });
 });
 
-module.exports = router;
+export default router;
