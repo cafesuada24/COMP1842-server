@@ -1,6 +1,6 @@
 import express from "express";
-import router from "./features/auth/authRoutes.js";
-import { connectDB } from "./config/dbConfig.js";
+import router from "./features/auth/auth.routes.js";
+import { connectDB } from "./config/database.js";
 await connectDB();
 
 const app = express();

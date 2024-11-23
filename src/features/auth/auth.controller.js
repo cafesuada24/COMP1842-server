@@ -1,5 +1,5 @@
-import User from '../auth/authModel.js'
-import { generateToken } from '../../utils/jwtUtils.js';
+import User from '../auth/auth.model.js'
+import { generateToken } from '../../utils/jwt.util.js';
 
 async function register(req, res) {
   try {
