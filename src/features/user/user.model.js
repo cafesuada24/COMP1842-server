@@ -33,7 +33,7 @@ const userSchema = new Schema({
       default: 'en',
     },
   },
-  finacialSummary: {
+  financialSummary: {
     totalIncome: {
       type: Number,
       default: 0,

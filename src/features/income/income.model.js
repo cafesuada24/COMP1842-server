@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+
 const { Schema, model } = mongoose;
 
 const incomeCategorySchema = new Schema({
@@ -10,7 +11,6 @@ const incomeCategorySchema = new Schema({
   name: {
     type: String,
     required: true,
-    unique: true
   },
 });
 
@@ -24,11 +24,11 @@ const incomeSchema = new Schema(
     amount: {
       type: Number,
       required: true,
+      min: [1, 'Income amount must me positive'],
     },
     categoryId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'incomeCategory',
-      //required: true,
     },
     description: {
       type: String,
@@ -41,7 +41,7 @@ const incomeSchema = new Schema(
   { timestamps: true }
 );
 
-const incomeCategoryModel = model('incomeCategory', incomeCategorySchema);
-const incomeModel = model('income', incomeSchema);
+const IncomeCategory = model('incomeCategory', incomeCategorySchema);
+const Income = model('income', incomeSchema);
 
-export { incomeModel, incomeCategoryModel };
+export { Income, IncomeCategory };
