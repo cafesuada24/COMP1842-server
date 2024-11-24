@@ -1,5 +1,6 @@
 import User from '../user/user.model.js'
 import { generateToken } from '../../utils/jwt.util.js';
+import { comparePassword } from './auth.util.js';
 
 async function register(req, res) {
   try {
@@ -29,18 +30,12 @@ async function login(req, res) {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
-    const isMatch = await user.comparePassword(password);
+    const isMatch = await comparePassword(user.password, password);
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
     const token = generateToken(user._id, user.role);
-
-    //const token = jwt.sign(
-    //    { userId: user._id, role: user.role },
-    //    JWT_SECRET,
-    //    { expiresIn: JWT_EXPIRES_IN }
-    //);
 
     res.status(200).json({ token });
   } catch (error) {
