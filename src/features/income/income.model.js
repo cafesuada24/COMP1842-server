@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 const { Schema, model } = mongoose;
 
 const incomeCategorySchema = new Schema({
@@ -10,6 +10,7 @@ const incomeCategorySchema = new Schema({
   name: {
     type: String,
     required: true,
+    unique: true
   },
 });
 
@@ -27,7 +28,7 @@ const incomeSchema = new Schema(
     categoryId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'incomeCategory',
-      required: true,
+      //required: true,
     },
     description: {
       type: String,
