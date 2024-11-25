@@ -1,0 +1,32 @@
+services:
+  comp1842-mongo-1:
+    image: mongodb/mongodb-community-server:latest
+    hostname: comp1842-mongo-1
+    container_name: comp1842-mongo-1
+    ports:
+      - 27017:27017
+    entrypoint: ["mongod", "--replSet", "comp1842-replica-set", "--bind_ip", "localhost,comp1842-mongo-1"]
+  comp1842-mongo-2:
+    image: mongodb/mongodb-community-server:latest
+    hostname: comp1842-mongo-2
+    container_name: comp1842-mongo-2
+    ports:
+      - 27018:27017
+    entrypoint: ["mongod", "--replSet", "comp1842-replica-set", "--bind_ip", "localhost,comp1842-mongo-2"]
+  comp1842-mongo-3:
+    image: mongodb/mongodb-community-server:latest
+    hostname: comp1842-mongo-3
+    container_name: comp1842-mongo-3
+    ports:
+      - 27019:27017
+    entrypoint: ["mongod", "--replSet", "comp1842-replica-set", "--bind_ip", "localhost,comp1842-mongo-3"]
+  mongosetup:
+    image: mongodb/mongodb-community-server:latest
+    depends_on:
+      - comp1842-mongo-1
+      - comp1842-mongo-2
+      - comp1842-mongo-3
+    volumes:
+      - ./scripts:/scripts:ro
+    restart: "no"
+    entrypoint: [ "bash", "/scripts/mongo_setup.sh" ]
