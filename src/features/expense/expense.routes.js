@@ -7,7 +7,7 @@ const router = Router();
 
 router.get('/', verifyUser, getExpenses);
 router.post('/', verifyUser, validateUser, createExpense);
-router.put('/:expenseId', verifyUser, updateExpense);
-router.delete('/:expenseId', verifyUser, deleteExpense);
+router.put('/:expenseId', verifyUser, validateUser, updateExpense);
+router.delete('/:expenseId', verifyUser, validateUser, deleteExpense);
 
 export default router;

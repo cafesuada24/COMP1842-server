@@ -1,21 +1,19 @@
 import mongoose, { isValidObjectId } from 'mongoose';
 
 import { Expense, ExpenseCategory } from './expense.model.js';
-import User from '../user/user.model.js';
 
 export async function createExpense(req, res) {
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
-    //const userId = req.user.userId;
     const user = req.userData;
 
     const { categoryId, amount, description } = req.body;
 
     const expense = await Expense.create([{ userId: user._id, categoryId, amount, description }], { session: session });
 
-    user.financialSummary.totalIncome -= amount;
+    user.financialSummary.totalExpense += amount;
     await user.save({ session });
 
     await session.commitTransaction();
@@ -35,65 +33,59 @@ export async function createExpense(req, res) {
 
 export async function getExpenses(req, res) {
   try {
-    const userId = req.user.userId;
-    const incomes = await Expense.find({ userId })
+    const expenses = await Expense.find({ userId: req.user.userId })
       .populate('categoryId', 'name description');
-    res.status(200).json(incomes);
+    res.status(200).json(expenses);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching incomes', error });
+    res.status(500).json({ message: 'Error fetching expenses', error });
   }
 }
 
 export async function updateExpense(req, res) {
   const session = await mongoose.startSession();
   session.startTransaction();
-  try {
-    const userId = req.user.userId;
-    const { incomeId } = req.params;
-    const { amount, description, categoryId } = req.body;
 
-    const income = await Expense.findOne({ _id: incomeId, userId: userId });
-    if (!income) {
-      return res.status(404).json({ message: 'Income not found' });
+
+  try {
+    const user = req.userData;
+    const { expenseId } = req.params;
+    const { categoryId, amount, description } = req.body;
+
+    const expense = await Expense.findOne({ _id: expenseId, userId: user._id }).session(session);
+    if (!expense) {
+      throw new mongoose.Error.ValidationError('Expense not found');
     }
 
     let change = 0;
 
     if (amount) {
-      change = amount - income.amount;
-      income.amount = amount;
+      change = amount - expense.amount;
+      expense.amount = amount;
     }
     if (description) {
-      income.description = description;
+      expense.description = description;
     }
     if (categoryId) {
-      if (!isValidObjectId(categoryId) || !ExpenseCategory.exists({ _id: categoryId, userId: userId })) {
+      if (!isValidObjectId(categoryId) || !ExpenseCategory.exists({ _id: categoryId, userId: user._id }).session(session)) {
         throw new mongoose.Error.ValidationError('Invalid category id');
       }
-      income.categoryId = categoryId;
+      expense.categoryId = categoryId;
     }
-    income.save();
+    await expense.save({ session });
 
-    const userUpdated = await User.findByIdAndUpdate(
-      income.userId,
-      { $inc: { "financialSummary.totalIncome": change } },
-      { new: true }
-    );
+    user.financialSummary.totalExpense += change;
+    await user.save({ session });
 
-    if (!userUpdated) {
-      throw new Error('An error occurred when updating balance');
-    }
-
-    res.status(200).json({ message: 'Income updated successfully', income });
     await session.commitTransaction();
+
+    res.status(200).json({ message: 'Expense updated successfully', income: expense });
   } catch (error) {
     await session.abortTransaction();
     if (error instanceof mongoose.Error.ValidationError) {
       res.status(400).json({ message: 'Invalid input', error });
     } else {
-      res.status(500).json({ message: 'Error updating income', error });
-    }
-  } finally {
+      res.status(500).json({ message: 'Error updating expense', error });
+    } } finally {
     await session.endSession();
   }
 }
@@ -103,30 +95,26 @@ export async function deleteExpense(req, res) {
   session.startTransaction();
 
   try {
-    const { incomeId } = req.params;
-    const income = await Expense.findOneAndDelete({ _id: incomeId, userId: req.user.userId });
+    const user = req.userData;
+    const { expenseId } = req.params;
+    const expense = await Expense.findOneAndDelete({ _id: expenseId, userId: user._id }, { session });
 
-    if (!income) {
-      res.status(404).json({ message: 'Income not found' });
-      return;
+    if (!expense) {
+      throw new mongoose.Error.ValidationError('Expense not found');
     }
 
-    const updatedUser = await User.findByIdAndUpdate(
-      income.userId,
-      { $inc: { "financialSummary.totalIncome": -income.amount } },
-      { new: true }
-    );
+    user.financialSummary.totalExpense -= expense.amount;
+    await user.save({ session });
 
-    if (!updatedUser) {
-      throw new Error('An error occurred when updating balance');
-    }
-    res.status(200).json({ message: 'Income deleted successfully' });
+    await session.commitTransaction();
+
+    res.status(200).json({ message: 'Expense deleted successfully' });
   } catch (error) {
     await session.abortTransaction();
     if (error instanceof mongoose.Error.ValidationError) {
       res.status(400).json({ message: 'Invalid input', error });
     } else {
-      res.status(500).json({ message: 'Error updating income', error });
+      res.status(500).json({ message: 'Error updating expense', error });
     }
   } finally {
     await session.endSession();
