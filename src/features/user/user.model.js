@@ -38,7 +38,7 @@ const userSchema = new Schema({
       type: Number,
       default: 0,
     },
-    totalExpenses: {
+    totalExpense: {
       type: Number,
       default: 0,
     },
