@@ -4,6 +4,7 @@ import authRouter from "./features/auth/auth.routes.js";
 import userRouter from "./features/user/user.routes.js";
 import incomeCategoryRouter from "./features/income/income-category.routes.js";
 import incomeRouter from "./features/income/income.routes.js";
+import expenseRouter from "./features/expense/expense.routes.js";
 import { connectDB } from "./config/database.js";
 
 await connectDB();
@@ -15,6 +16,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/user', userRouter);
 app.use('/api/income/', incomeRouter);
 app.use('/api/income/category', incomeCategoryRouter);
+app.use('/api/expense/', expenseRouter);
 
 //export default app;
 app.listen(process.env.PORT, () => {
