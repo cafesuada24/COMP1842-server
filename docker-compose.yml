@@ -1,32 +1,38 @@
 services:
   comp1842-mongo-1:
     image: mongodb/mongodb-community-server:latest
-    hostname: comp1842-mongo-1
     container_name: comp1842-mongo-1
     ports:
-      - 27017:27017
-    entrypoint: ["mongod", "--replSet", "comp1842-replica-set", "--bind_ip", "localhost,comp1842-mongo-1"]
+      - 127.0.10.1:27017:27017
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "27017"] 
+    healthcheck:
+      test: echo "try { rs.status() } catch (err) { rs.initiate({_id:'rs0',members:[{_id:0,host:'comp1842-mongo-1:27017',priority:1},{_id:1,host:'comp1842-mongo-2:27017',priority:0.5},{_id:2,host:'comp1842-mongo-3:27017',priority:0.5}]}) }" | mongosh --port 27017 --quiet
+      interval: 5s
+      timeout: 30s
+      start_period: 0s
+      start_interval: 1s
+      retries: 30
+    networks:
+      - comp1842-mongo-cluster
+    restart: unless-stopped
   comp1842-mongo-2:
     image: mongodb/mongodb-community-server:latest
-    hostname: comp1842-mongo-2
     container_name: comp1842-mongo-2
     ports:
-      - 27018:27017
-    entrypoint: ["mongod", "--replSet", "comp1842-replica-set", "--bind_ip", "localhost,comp1842-mongo-2"]
+      - 127.0.10.2:27017:27017
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "27017"]
+    networks:
+      - comp1842-mongo-cluster
+    restart: unless-stopped
   comp1842-mongo-3:
     image: mongodb/mongodb-community-server:latest
-    hostname: comp1842-mongo-3
     container_name: comp1842-mongo-3
     ports:
-      - 27019:27017
-    entrypoint: ["mongod", "--replSet", "comp1842-replica-set", "--bind_ip", "localhost,comp1842-mongo-3"]
-  mongosetup:
-    image: mongodb/mongodb-community-server:latest
-    depends_on:
-      - comp1842-mongo-1
-      - comp1842-mongo-2
-      - comp1842-mongo-3
-    volumes:
-      - ./scripts:/scripts:ro
-    restart: "no"
-    entrypoint: [ "bash", "/scripts/mongo_setup.sh" ]
+      - 127.0.10.3:27017:27017
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "27017"]
+    networks:
+      - comp1842-mongo-cluster
+    restart: unless-stopped
+networks:
+  comp1842-mongo-cluster:
+    driver: bridge
