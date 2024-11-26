@@ -6,6 +6,7 @@ import incomeCategoryRouter from "./features/income/income-category.routes.js";
 import incomeRouter from "./features/income/income.routes.js";
 import expenseRouter from "./features/expense/expense.routes.js";
 import { connectDB } from "./config/database.js";
+import router from "./features/saving-goal/saving-goal.routes.js";
 
 await connectDB();
 
@@ -17,6 +18,7 @@ app.use('/api/user', userRouter);
 app.use('/api/income/', incomeRouter);
 app.use('/api/income/category', incomeCategoryRouter);
 app.use('/api/expense/', expenseRouter);
+app.use('/api/saving-goal', router);
 
 //export default app;
 app.listen(process.env.PORT, () => {
