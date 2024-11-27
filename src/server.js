@@ -5,8 +5,9 @@ import userRouter from "./features/user/user.routes.js";
 import incomeCategoryRouter from "./features/income/income-category.routes.js";
 import incomeRouter from "./features/income/income.routes.js";
 import expenseRouter from "./features/expense/expense.routes.js";
+import savingGoalRouter from "./features/saving-goal/saving-goal.routes.js";
+import dashboardRouter from "./features/dashboard/dashboard.routes.js";
 import { connectDB } from "./config/database.js";
-import router from "./features/saving-goal/saving-goal.routes.js";
 
 await connectDB();
 
@@ -18,7 +19,8 @@ app.use('/api/user', userRouter);
 app.use('/api/income/', incomeRouter);
 app.use('/api/income/category', incomeCategoryRouter);
 app.use('/api/expense/', expenseRouter);
-app.use('/api/saving-goal', router);
+app.use('/api/saving-goal', savingGoalRouter);
+app.use('/api/dashboard', dashboardRouter);
 
 //export default app;
 app.listen(process.env.PORT, () => {
