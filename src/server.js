@@ -5,6 +5,7 @@ import userRouter from "./features/user/user.routes.js";
 import incomeCategoryRouter from "./features/income/income-category.routes.js";
 import incomeRouter from "./features/income/income.routes.js";
 import expenseRouter from "./features/expense/expense.routes.js";
+import expenseCategoryRouter from "./features/expense/expense-category.routes.js";
 import savingGoalRouter from "./features/saving-goal/saving-goal.routes.js";
 import dashboardRouter from "./features/dashboard/dashboard.routes.js";
 import { connectDB } from "./config/database.js";
@@ -19,6 +20,7 @@ app.use('/api/user', userRouter);
 app.use('/api/income/', incomeRouter);
 app.use('/api/income/category', incomeCategoryRouter);
 app.use('/api/expense/', expenseRouter);
+app.use('/api/expense/category', expenseCategoryRouter);
 app.use('/api/saving-goal', savingGoalRouter);
 app.use('/api/dashboard', dashboardRouter);
 

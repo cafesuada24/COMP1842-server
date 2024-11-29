@@ -4,37 +4,37 @@ import mongoose, { isValidObjectId } from 'mongoose';
 import { runInTransaction } from '../../utils/database.util.js';
 
 export async function createIncome(req, res) {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
   try {
-    const userId = req.user.userId;
-    const { category, amount, description } = req.body;
+    await runInTransaction(async (session) => {
+      const userId = req.user.userId;
+      const { category, amount, description } = req.body;
 
-    const income = new Income({ userId, category: category?._id, amount, description });
-    await income.save({ session });
+      if (category && category?._id) {
+        if (!isValidObjectId(category._id) || !IncomeCategory.exists({ _id: category._id, userId: userId }, { session })) {
+          throw new mongoose.Error.ValidationError('Invalid category id');
+        }
+      }
 
-    const userUpdated = await User.findByIdAndUpdate(
-      userId,
-      { $inc: { "financialSummary.totalIncome": amount } },
-      { new: true, session }
-    );
-    if (!userUpdated) {
-      throw new Error('An error occurred when updating balance');
-    }
+      const income = new Income({ userId, category: category?._id, amount, description });
+      await income.save({ session });
 
-    res.status(201).json({ success: true, data: await income.populate('category', 'name description') });
+      const userUpdated = await User.findByIdAndUpdate(
+        userId,
+        { $inc: { "financialSummary.totalIncome": amount } },
+        { new: true, session }
+      );
+      if (!userUpdated) {
+        throw new Error('An error occurred when updating balance');
+      }
 
-    await session.commitTransaction();
+      res.status(201).json({ success: true, data: await income.populate('category', 'name description') });
+    });
   } catch (error) {
-    await session.abortTransaction();
     if (error instanceof mongoose.Error.ValidationError) {
-      res.status(400).json({ message: 'Invalid input', error });
+      res.status(400).json({ success: false, message: 'Invalid input', error });
     } else {
-      res.status(500).json({ message: 'Error updating income', error });
+      res.status(500).json({ success: false, message: 'Error updating income', error });
     }
-  } finally {
-    await session.endSession();
   }
 }
 
@@ -45,7 +45,7 @@ export async function getIncomes(req, res) {
       .populate('category', 'name description');
     res.status(200).json(incomes);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching incomes', error });
+    res.status(500).json({ success: false, message: 'Error fetching incomes', error });
   }
 }
 
@@ -56,7 +56,7 @@ export async function updateIncome(req, res) {
       const { incomeId } = req.params;
       const { amount, description, category } = req.body;
 
-      const income = await Income.findOne({ _id: incomeId, userId: userId }).session(session);
+      const income = await Income.findOne({ _id: incomeId, userId }).session(session);
       if (!income) {
         return res.status(404).json({ message: 'Income not found' });
       }
@@ -71,12 +71,12 @@ export async function updateIncome(req, res) {
         income.description = description;
       }
       if (category && category?._id) {
-        if (!isValidObjectId(category._id) || !IncomeCategory.exists({ _id: category._id, userId: userId })) {
+        if (!isValidObjectId(category._id) || !IncomeCategory.exists({ _id: category._id, userId })) {
           throw new mongoose.Error.ValidationError('Invalid category id');
         }
         income.category = category._id;
       }
-      income.save();
+      await income.save();
 
       const userUpdated = await User.findByIdAndUpdate(
         income.userId,
@@ -88,13 +88,13 @@ export async function updateIncome(req, res) {
         throw new Error('An error occurred when updating balance');
       }
 
-      res.status(200).json({ message: 'Income updated successfully', data: await income.populate('category', 'name description')});
+      res.status(200).json({ success: true, message: 'Income updated successfully', data: await income.populate('category', 'name description') });
     });
   } catch (error) {
     if (error instanceof mongoose.Error.ValidationError) {
-      res.status(400).json({ message: 'Invalid input', error });
+      res.status(400).json({ success: false, message: 'Invalid input', error });
     } else {
-      res.status(500).json({ message: 'Error updating income', error });
+      res.status(500).json({ success: false, message: 'Error updating income', error });
     }
   }
 }
@@ -105,20 +105,20 @@ export async function deleteIncome(req, res) {
       const { incomeId } = req.params;
       const income = await Income.findOne({ _id: incomeId, userId: req.user.userId }).session(session);
       if (!income) {
-        throw new mongoose.Error.ValidationError('Invalid category id');
+        throw new mongoose.error.validationerror('invalid category id');
       }
       const user = await User.findById({ _id: req.user.userId }).session(session);
       user.financialSummary.totalIncome -= income.amount;
       user.save();
       await Income.deleteOne(income).session(session);
 
-      res.status(200).json({ message: 'Income deleted successfully' });
+      res.status(200).json({ success: true });
     })
   } catch (error) {
     if (error instanceof mongoose.Error.ValidationError) {
-      res.status(400).json({ message: 'Invalid input', error });
+      res.status(400).json({ success: false, message: 'Invalid input', error });
     } else {
-      res.status(500).json({ message: 'Error updating income', error });
+      res.status(500).json({ success: false, message: 'Error updating income', error });
     }
   }
 };
