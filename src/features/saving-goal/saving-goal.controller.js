@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { runInTransaction } from '../../utils/database.util.js';
 import SavingGoal from './saving-goal.model.js';
 
@@ -9,19 +10,22 @@ export async function createSavingGoal(req, res) {
     const savingGoal = new SavingGoal({ userId, title, targetAmount, deadline });
     await savingGoal.save();
 
-    res.status(201).json({ success: true, message: 'Saving goal created successfully', savingGoal });
+    res.status(201).json({ success: true, message: 'Saving goal created successfully', data: savingGoal });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Error creating saving goal', error });
+    if (error instanceof mongoose.Error.ValidationError) {
+      res.status(400).json({ success: false, message: 'Invalid input', error });
+    } else {
+      res.status(500).json({ success: false, message: 'Error creating saving goal', error });
+    }
   }
 }
 
 export async function getSavingGoals(req, res) {
   try {
-    const { userId } = req.query;
 
-    const savingGoals = await SavingGoal.find({ userId });
+    const savingGoals = await SavingGoal.find({ userId: req.user.userId });
 
-    res.status(200).json({ success: true, savingGoals });
+    res.status(200).json(savingGoals);
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error fetching saving goals', error });
   }
@@ -59,11 +63,41 @@ export async function updateSavingGoal(req, res) {
 
       await savingGoal.save({ session });
 
-      res.status(200).json({ success: true, message: 'Saving goal updated successfully', savingGoal });
+      res.status(200).json({ success: true, message: 'Saving goal updated successfully', data: savingGoal });
     } catch (error) {
-      res.status(500).json({ success: false, message: 'Error updating saving goal', error });
+      if (error instanceof mongoose.Error.ValidationError) {
+        res.status(400).json({ success: false, message: 'Invalid input', error });
+      } else {
+        res.status(500).json({ success: false, message: 'Error updating saving goal', error });
+      }
     }
   });
+}
+
+export async function addTransaction(req, res) {
+  try {
+    const { goalId } = req.params;
+    const { amount, isWithdraw } = req.body;
+
+    const savingGoal = await SavingGoal.findOne(
+      { _id: goalId, userId: req.user.userId },
+    );
+
+    if (!savingGoal) {
+      return res.status(404).json({ success: false, message: 'Saving goal not found' });
+    }
+
+    savingGoal.currentAmount += isWithdraw ? -parseFloat(amount) : parseFloat(amount);
+    await savingGoal.save();
+
+    res.status(200).json({ success: true, message: 'Trasaction added', data: savingGoal });
+  } catch (error) {
+    if (error instanceof mongoose.Error.ValidationError) {
+      res.status(400).json({ success: false, message: 'Invalid input', error });
+    } else {
+      res.status(500).json({ success: false, message: 'Error updating saving goal', error });
+    }
+  }
 }
 
 export async function deleteSavingGoal(req, res) {
