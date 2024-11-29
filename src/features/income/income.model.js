@@ -26,7 +26,7 @@ const incomeSchema = new Schema(
       required: true,
       min: [1, 'Income amount must me positive'],
     },
-    categoryId: {
+    category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'incomeCategory',
     },

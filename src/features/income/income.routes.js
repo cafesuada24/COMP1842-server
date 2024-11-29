@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { createIncome, getIncomes, updateIncome, deleteIncome } from './income.controller.js';
 import { verifyUser } from '../auth/auth.middleware.js';
+import { validateUser } from '../user/user.middleware.js';
 
 const router = Router();
 

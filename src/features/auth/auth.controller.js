@@ -37,7 +37,7 @@ async function login(req, res) {
 
     const token = generateToken(user._id, user.role);
 
-    res.status(200).json({ token });
+    res.status(200).json({ userId: user._id, token });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error logging in user.' });
