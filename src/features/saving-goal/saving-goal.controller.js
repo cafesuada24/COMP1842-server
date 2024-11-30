@@ -88,6 +88,11 @@ export async function addTransaction(req, res) {
     }
 
     savingGoal.currentAmount += isWithdraw ? -parseFloat(amount) : parseFloat(amount);
+    if (savingGoal.currentAmount >= savingGoal.targetAmount) {
+      savingGoal.status = 'achieved';
+    } else {
+      savingGoal.status = 'active';
+    }
     await savingGoal.save();
 
     res.status(200).json({ success: true, message: 'Trasaction added', data: savingGoal });

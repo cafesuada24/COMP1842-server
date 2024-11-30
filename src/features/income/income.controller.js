@@ -7,7 +7,7 @@ export async function createIncome(req, res) {
   try {
     await runInTransaction(async (session) => {
       const userId = req.user.userId;
-      const { category, amount, description } = req.body;
+      const { category, amount, description, date } = req.body;
 
       if (category && category?._id) {
         if (!isValidObjectId(category._id) || !IncomeCategory.exists({ _id: category._id, userId: userId }, { session })) {
@@ -15,7 +15,7 @@ export async function createIncome(req, res) {
         }
       }
 
-      const income = new Income({ userId, category: category?._id, amount, description });
+      const income = new Income({ userId, category: category?._id, amount, description, date });
       await income.save({ session });
 
       const userUpdated = await User.findByIdAndUpdate(
@@ -54,7 +54,7 @@ export async function updateIncome(req, res) {
     await runInTransaction(async (session) => {
       const userId = req.user.userId;
       const { incomeId } = req.params;
-      const { amount, description, category } = req.body;
+      const { amount, description, category, date } = req.body;
 
       const income = await Income.findOne({ _id: incomeId, userId }).session(session);
       if (!income) {
@@ -75,6 +75,9 @@ export async function updateIncome(req, res) {
           throw new mongoose.Error.ValidationError('Invalid category id');
         }
         income.category = category._id;
+      }
+      if (date) {
+        income.date = date;
       }
       await income.save();
 

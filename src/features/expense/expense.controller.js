@@ -8,15 +8,15 @@ export async function createExpense(req, res) {
   try {
     await runInTransaction(async (session) => {
       const userId = req.user.userId;
-      const { category, amount, description } = req.body;
+      const { category, amount, description, date } = req.body;
 
       if (category && category?._id) {
         if (!isValidObjectId(category._id) || !ExpenseCategory.exists({ _id: category._id, userId: userId }, { session })) {
           throw new mongoose.Error.ValidationError('Invalid category id');
         }
       }
-      const expense = await Expense({ userId, category: category?._id, amount, description });
-      expense.save({ session });
+      const expense = new Expense({ userId, category: category?._id, amount, description, date });
+      await expense.save({ session });
 
       const userUpdated = await User.findByIdAndUpdate(
         userId,
@@ -54,7 +54,7 @@ export async function updateExpense(req, res) {
     await runInTransaction(async (session) => {
       const userId = req.user.userId;
       const { expenseId } = req.params;
-      const { category, amount, description } = req.body;
+      const { category, amount, description, date } = req.body;
 
       const expense = await Expense.findOne({ _id: expenseId, userId }).session(session);
       if (!expense) {
@@ -76,6 +76,10 @@ export async function updateExpense(req, res) {
           throw new mongoose.Error.ValidationError('Invalid category id');
         }
         expense.category = category._id;
+      }
+
+      if (date) {
+        expense.date = date;
       }
       await expense.save();
 
